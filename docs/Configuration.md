@@ -364,6 +364,19 @@ You can optionally set a global maximum number of concurrent jobs to allow.  Thi
 
 The `Storage` object contains settings for the Cronicle storage system.  This is built on the [pixl-server-storage](https://www.npmjs.com/package/pixl-server-storage) module, which can write everything to local disk (the default), [Couchbase](http://www.couchbase.com/nosql-databases/couchbase-server) or [Amazon S3](https://aws.amazon.com/s3/).
 
+It is highly recommended that you enable transactions in the storage system.  This will protect against database corruption in the event of a crash or sudden power loss:
+
+```js
+{
+	"Storage": {
+		"transactions": true,
+		"trans_auto_recover": true,
+		
+		...
+	}
+}
+```
+
 To select a storage engine, place one of the following values into the `engine` property:
 
 ### Filesystem
@@ -373,6 +386,9 @@ The default storage method is to use local disk (can also be an NFS mount, for m
 ```js
 {
 	"Storage": {
+		"transactions": true,
+		"trans_auto_recover": true,
+		
 		"engine": "Filesystem",
 		"Filesystem": {
 			"base_dir": "data",
@@ -395,6 +411,9 @@ To use Couchbase as a backing store for Cronicle, please read the [Couchbase sec
 ```js
 {
 	"Storage": {
+		"transactions": true,
+		"trans_auto_recover": true,
+		
 		"engine": "Couchbase",
 		"Couchbase": {
 			"connectString": "couchbase://127.0.0.1",
@@ -432,23 +451,30 @@ To use Amazon S3 as a backing store for Cronicle, please read the [Amazon S3 sec
 ```js
 {
 	"Storage": {
+		"transactions": true,
+		"trans_auto_recover": true,
+		
 		"engine": "S3",
 		"AWS": {
-			"accessKeyId": "YOUR_AMAZON_ACCESS_KEY", 
-			"secretAccessKey": "YOUR_AMAZON_SECRET_KEY", 
 			"region": "us-west-1",
-			"correctClockSkew": true,
-			"maxRetries": 5,
-			"httpOptions": {
-				"connectTimeout": 5000,
-				"timeout": 5000
+			"credentials": {
+				"accessKeyId": "YOUR_AMAZON_ACCESS_KEY", 
+				"secretAccessKey": "YOUR_AMAZON_SECRET_KEY"
 			}
 		},
 		"S3": {
-			"keyPrefix": "cronicle",
+			"connectTimeout": 5000,
+			"socketTimeout": 5000,
+			"maxAttempts": 50,
+			"keyPrefix": "",
 			"fileExtensions": true,
 			"params": {
-				"Bucket": "YOUR_S3_BUCKET_ID"
+				"Bucket": "MY_S3_BUCKET_ID"
+			},
+			"cache": {
+				"enabled": true,
+				"maxItems": 1000,
+				"maxBytes": 10485760
 			}
 		}
 	}
